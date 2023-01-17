@@ -1,0 +1,80 @@
+org: bencoderus
+app: serverless-upload
+service: serverless-file-service
+frameworkVersion: '3'
+
+custom:
+  # bucket: bencoderus-serverless-testing
+  bucket: biduwe
+  fileTable: 'files-table-${self:provider.stage}'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: dev
+  memorySize: 2048
+  region: 'us-east-1'
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource: 'arn:aws:s3:::${self:custom.bucket}/*'
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [FilesDynamoDBTable, Arn]
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - Fn::GetAtt: [FilesDynamoDBTable, Arn]
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.fileTable}/index/*
+
+functions:
+  api:
+    handler: src/handler.handler
+    events:
+      - httpApi: '*'
+    environment:
+      AWS_BUCKET_NAME: ${self:custom.bucket}
+      FILE_TABLE_NAME: ${self:custom.fileTable}
+      DYNAMODB_LOCAL_ENDPOINT: http://localhost:4566
+
+resources:
+  Resources:
+    FilesDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: fileKey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: fileKeyIndex
+            KeySchema:
+              - AttributeName: fileKey
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.fileTable}
+
+plugins:
+  - serverless-offline
