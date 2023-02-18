@@ -51,6 +51,10 @@ module.exports = {
     };
   },
 
+  async markFileNameAsUsed(filename) {
+    return dynamodb.markFileNameAsUsedById(TABLE_NAME, filename);
+  },
+
   async getSignedUrlForDownload(filename) {
     const key = filename;
 
@@ -70,7 +74,9 @@ module.exports = {
 
     return {
       fileName: key,
-      signedUrl: signedUrl
+      signedUrl: signedUrl,
+      usedAt: record.usedAt,
+      createdAt: record.createdAt
     };
   }
 };

@@ -48,6 +48,19 @@ functions:
       FILE_TABLE_NAME: ${self:custom.fileTable}
       DYNAMODB_LOCAL_ENDPOINT: http://localhost:4566
 
+  handleUploadEvent:
+    handler: src/event.handler
+    events:
+      - s3:
+          bucket: ${self:custom.bucket}
+          event: s3:ObjectCreated:*
+          existing: true
+          forceDeploy: true
+    environment:
+      AWS_BUCKET_NAME: ${self:custom.bucket}
+      FILE_TABLE_NAME: ${self:custom.fileTable}
+      DYNAMODB_LOCAL_ENDPOINT: http://localhost:4566
+
 resources:
   Resources:
     FilesDynamoDBTable:
