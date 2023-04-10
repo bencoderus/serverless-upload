@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "ajv": "^8.11.2",
-    "aws-sdk": "^2.1278.0",
+    "aws-sdk": "^2.1354.0",
     "express": "^4.17.1",
     "joi": "^17.7.0",
     "response-transformer": "^0.7.1",
